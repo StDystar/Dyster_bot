@@ -1,4 +1,6 @@
 import discord
+import os
+import requests 
 from discord.ext import commands
 import random
 from Coin import coin
@@ -16,10 +18,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='$', description=description, intents=intents)
 
 
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
-    print('------')
 
 
 @bot.command()
@@ -40,6 +38,31 @@ async def roll(ctx, dice: str):
     result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
     await ctx.send(result)
 
+
+
+@bot.command()
+async def mem(ctx):
+    meme=random.choice(os.listdir("images"))
+
+    with open(f'images/{meme}', 'rb') as f:
+        # ¡Vamos a almacenar el archivo de la biblioteca Discord convertido en esta variable!
+        picture = discord.File(f)
+    # A continuación, podemos enviar este archivo como parámetro.
+    await ctx.send(file=picture)
+
+def get_duck_image_url():    
+    url = 'https://random-d.uk/api/random'
+    res = requests.get(url)
+    data = res.json()
+    return data['url']
+
+
+@bot.command('duck')
+async def duck(ctx):
+    '''Una vez que llamamos al comando duck, 
+    el programa llama a la función get_duck_image_url'''
+    image_url = get_duck_image_url()
+    await ctx.send(image_url)
 
 @bot.command(description='For when you wanna settle the score some other way')
 async def choose(ctx, *choices: str):
@@ -86,6 +109,22 @@ async def cool(ctx):
 async def _bot(ctx):
     """Is the bot cool?"""
     await ctx.send('Yes, the bot is cool.')
+
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print('------')
+
+@bot.event
+async def on_member_join(ctx, member):
+    guild = member.guild
+    if guild.system_channel is not None:
+        to_send = f'Welcome {member.mention} to {guild.name}!'
+        await guild.system_channel.send(to_send)
+
+
+intents = discord.Intents.default()
+intents.members = True
 
 
 bot.run("Token")
